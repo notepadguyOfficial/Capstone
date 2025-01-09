@@ -2,9 +2,10 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
 const type_enum = [
-    'Customer',
-    'Owner',
-    'Staff'
+    0,
+    1,
+    2,
+    3
 ];
 
 const channels = [
@@ -18,8 +19,8 @@ const channels = [
     'SALES'
 ]
 
-function SecretKey(size, type) {
-    return crypto.randomBytes(size).toString(type);
+function SecretKey(size, encoding) {
+    return crypto.randomBytes(size).toString(encoding);
 }
 
 function GenerateToken(id, type) {

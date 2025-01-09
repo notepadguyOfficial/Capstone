@@ -6,12 +6,16 @@ const axios = require('axios');
 const WebSocket = require('ws');
 const Logs = require('./Logs');
 const { Connect, pool, Stop } = require('./db');
-const { type_enum, GenerateToken, channels } = require('./lib');
+const { type_enum, GenerateToken, SecretKey, channels } = require('./lib');
+const cors = require('cors');
+const { createSecretKey } = require('crypto');
 
 const port = 3000;
 
 const app = express();
 const sockets = new WebSocket.Server({ noServer: true });
+
+app.use(cors());
 
 app.use(bodyParser.json());
 
@@ -75,17 +79,19 @@ app.post('/register', async(req, res) => {
 
         let query, data, user;
 
-        if (type === 'Customer') {
-            query = "INSERT INTO public.Customer (customer_fname, customer_lname, customer_phone_num, customer_address, customer_gender, customer_username, customer_password, customer_address_long, customer_address_lang) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING customer_id AS id";
-            data = [fname, lname, phone, address, gender, username, hash, long, lang];
-        }
-        else if (type === 'Owner') {
-            query = "INSERT INTO public.station_owner (st_owner_fname, st_owner_lname, st_owner_phone_num, st_owner_gender, st_owner_username, st_owner_password) VALUES ($1, $2, $3, $4, $5, $6) RETURNING st_owner_id AS id";
-            data = [fname, lname, phone, gender, username, hash];
-        }
-        else {
-            query = "INSERT INTO public.staff (staff_fname, staff_lname, staff_phone_num, staff_gender, staff_username, staff_password) VALUES ($1, $2, $3, $4, $5, $6) RETURNING staff_id AS id";
-            data = [fname, lname, phone, gender, username, hash];
+        switch(type) {
+            case 1: // Customer
+                query = 'INSERT INTO public."Customer" (customer_fname, customer_lname, customer_phone_num, customer_address, customer_gender, customer_username, customer_password, customer_address_long, customer_address_lat) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING customer_id AS id';
+                data = [fname, lname, phone, address, gender, username, hash, long, lang];
+                break;
+            case 2: // Owner
+                query = "INSERT INTO public.station_owner (st_owner_fname, st_owner_lname, st_owner_phone_num, st_owner_gender, st_owner_username, st_owner_password) VALUES ($1, $2, $3, $4, $5, $6) RETURNING st_owner_id AS id";
+                data = [fname, lname, phone, gender, username, hash];
+                break;
+            case 3: // Staff
+                query = "INSERT INTO public.staff (staff_fname, staff_lname, staff_phone_num, staff_gender, staff_username, staff_password) VALUES ($1, $2, $3, $4, $5, $6) RETURNING staff_id AS id";
+                data = [fname, lname, phone, gender, username, hash];
+                break;
         }
 
         const result = await pool.query(query, data);
@@ -93,6 +99,17 @@ app.post('/register', async(req, res) => {
         user = result.rows[0];
 
         const token = GenerateToken(user.id, type);
+
+        const tokenQuery = `
+            INSERT INTO public.authentication (userid, token)
+            VALUES ($1, $2)
+            ON CONFLICT (userid) 
+            DO UPDATE SET token = $2, created_at = CURRENT_TIMESTAMP
+            RETURNING userid;
+        `;
+
+        await pool.query(tokenQuery, [user.id, token]);
+
         res.json({ message: 'User Registered Successfully!', token });
         Logs.http(`Response being sent: User Registered Successfully! User ID: ${user.id} | Token: ${token}` );
     } catch (error) {
@@ -125,17 +142,24 @@ app.post('/login', async(req, res) => {
         });
     }
 
+    Logs.debug(`Incoming Type: ${type}`);
+
     try {
         let query, user;
 
-        if(type == 'Customer') {
-            query = "SELECT customer_id AS id, customer_password AS password FROM public.Customer WHERE customer_username = $1";
-        }
-        else if (type === 'Owner') {
-            query = "SELECT st_owner_id AS id, st_owner_password AS password FROM public.station_owner WHERE st_owner_username = $1";
-        }
-        else {
-            query = "SELECT staff_id AS id, staff_password AS password FROM public.staff WHERE staff_username = $1";
+        switch(type) {
+            case 0: // Admin
+                query = "SELECT app_owner_id AS id, app_owner_password AS password FROM public.app_owner WHERE staff_username = $1";
+                break;
+            case 1: // Customer
+                query = 'SELECT customer_id AS id, customer_password AS password FROM public."Customer" WHERE customer_username = $1';
+                break;
+            case 2: // Owner
+                query = "SELECT st_owner_id AS id, st_owner_password AS password FROM public.station_owner WHERE st_owner_username = $1";
+                break;
+            case 3: // Staff
+                query = "SELECT staff_id AS id, staff_password AS password FROM public.staff WHERE staff_username = $1";
+                break;
         }
 
         const result = await pool.query(query, [username]);
@@ -154,8 +178,51 @@ app.post('/login', async(req, res) => {
         }
 
         const token = GenerateToken(user.id, type);
+
+        const tokenQuery = `
+            INSERT INTO public.authentication (userid, token)
+            VALUES ($1, $2)
+            ON CONFLICT (userid) 
+            DO UPDATE SET token = $2, created_at = CURRENT_TIMESTAMP
+            RETURNING userid;
+        `;
+
+        await pool.query(tokenQuery, [user.id, token]);
+        
         Logs.http(`Response being sent: Login successful for UserID: ${user.id} | Token: ${token}`);
         res.json({ message: 'Login successful!', token });
+    }
+    catch(error) {
+        res.status(500).json({ error: error.message });
+        Logs.error(`Response being sent: ${error.message}`);
+    }
+});
+
+app.post('/logout', async(req, res) => {
+    Logs.http('Received POST request to /logout');
+    Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
+    Logs.http(`Incoming Remote Address: ${req.ip || req.socket.remoteAddress}`);
+
+    const { userid, token } = req.body;
+    
+    if(!userid || !token) {
+        return res.status(400).json({ error: 'User ID and Token are required for logout' });
+    }
+
+    try {
+        const query = "SELECT * FROM public.authentication WHERE userid = $1 AND token = $2";
+        const result = await pool.query(query, [userid, token]);
+
+        if(result.rows.length === 0) {
+            Logs.error(`Response being sent: Invalid token! | status: 401`);
+            return res.status(401).json({ error: 'Invalid token!' });
+        }
+
+        const deleteQuery = "DELETE FROM public.authentication WHERE userid = $1";
+        await pool.query(deleteQuery, [userid]);
+
+        Logs.http(`Response being sent: User logged out successfully for UserID: ${userid}`);
+        res.json({ message: 'Logout successful!' });
     }
     catch(error) {
         res.status(500).json({ error: error.message });
