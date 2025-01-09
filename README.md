@@ -41,6 +41,11 @@ Hydro App is a mobile platform designed to streamline sales, orders, delivery, a
     npm install
     ```
 
+    (!Note)If you want to automatically save progress without restarting app
+    ```bash
+    npm install -g nodemon
+    ```
+
 3. **Set up the database:**
     - Ensure PostgreSQL is installed and running.
     - Create a new database.
@@ -56,6 +61,10 @@ Hydro App is a mobile platform designed to streamline sales, orders, delivery, a
 1. **Start the application:**
     ```bash
     npm start
+    ```
+    or
+    ```bash
+    nodemon app.js
     ```
 
 2. **Access the application:**
