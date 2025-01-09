@@ -41,7 +41,7 @@ sockets.on('connection', (socket) => {
     });
 });
 
-app.post('/register', async(req, res) => {
+app.post('/register', async (req, res) => {
     Logs.http('Received POST request to /register');
     Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
     Logs.http(`Request Headers: ${JSON.stringify(req.headers)}`);
@@ -49,99 +49,93 @@ app.post('/register', async(req, res) => {
 
     const { fname, lname, staff_type, address, phone, gender, username, password, long, lang, type } = req.body;
 
-    // if(!fname
-    //     || !lname
-    //     || !address
-    //     || !phone
-    //     || !gender
-    //     || !username
-    //     || !password
-    //     || !long
-    //     || !lang
-    //     || !type
-    // ) {
-    //     Logs.warning(`Response being sent: All Fields are require! | status: 400` );
-    //     return res.status(400).json({
-    //         error: 'All Fields are require!'
-    //     });
-    // }
+    if (!type_enum.includes(type)) {
+        Logs.error('Response being sent: Invalid user type! | status: 400');
+        return res.status(400).json({ error: 'Invalid user type!' });
+    }
 
-    if(!type_enum.includes(type)) {
-        Logs.error(`Response being sent: Invalid user type! | status: 400` );
-        return res.status(400).json({
-            error: 'Invalid user type!'
-        });
+    const fieldConfigs = {
+        1: { // Customer
+            requiredFields: ['fname', 'lname', 'address', 'phone', 'gender', 'username', 'password', 'long', 'lang'],
+            table: 'Customer',
+            data: {
+                customer_fname: fname,
+                customer_lname: lname,
+                customer_phone_num: phone,
+                customer_address: address,
+                customer_gender: gender,
+                customer_username: username,
+                customer_password: null, // Placeholder for hashed password
+                customer_address_long: long,
+                customer_address_lat: lang,
+            },
+            field: 'customer_id',
+        },
+        2: { // Owner
+            requiredFields: ['fname', 'lname', 'phone', 'gender', 'username', 'password'],
+            table: 'station_owner',
+            data: {
+                st_owner_fname: fname,
+                st_owner_lname: lname,
+                st_owner_phone_num: phone,
+                st_owner_gender: gender,
+                st_owner_username: username,
+                st_owner_password: null, // Placeholder for hashed password
+            },
+            field: 'st_owner_id',
+        },
+        3: { // Staff
+            requiredFields: ['fname', 'lname', 'staff_type', 'phone', 'gender', 'username', 'password'],
+            table: 'staff',
+            data: {
+                staff_fname: fname,
+                staff_lname: lname,
+                staff_type: staff_type,
+                staff_phone_num: phone,
+                staff_gender: gender,
+                staff_username: username,
+                staff_password: null, // Placeholder for hashed password
+            },
+            field: 'staff_id',
+        },
+    };
+
+    const config = fieldConfigs[type];
+    if (!config) {
+        Logs.error('Response being sent: Unknown type received | status: 400');
+        return res.status(400).json({ error: 'Invalid user type!' });
+    }
+
+    // Validate required fields
+    const missingFields = config.requiredFields.filter((field) => !req.body[field]);
+    if (missingFields.length) {
+        Logs.warning(`Response being sent: Missing Fields: ${missingFields.join(', ')} | status: 400`);
+        return res.status(400).json({ error: `Missing Fields: ${missingFields.join(', ')}` });
     }
 
     try {
         const hash = await bcrypt.hash(password, 10);
+        config.data[Object.keys(config.data).find((key) => key.includes('password'))] = hash;
 
-        let table, data, field;
+        const [user] = await db(config.table)
+            .insert(config.data)
+            .returning([config.field]);
 
-        switch (type) {
-            case 1: // Customer
-                table = 'Customer';
-                data = {
-                    customer_fname: fname,
-                    customer_lname: lname,
-                    customer_phone_num: phone,
-                    customer_address: address,
-                    customer_gender: gender,
-                    customer_username: username,
-                    customer_password: hash,
-                    customer_address_long: long,
-                    customer_address_lat: lang,
-                };
-                field = 'customer_id';
-                break;
-            case 2: // Owner
-                table = 'station_owner';
-                data = {
-                    st_owner_fname: fname,
-                    st_owner_lname: lname,
-                    st_owner_phone_num: phone,
-                    st_owner_gender: gender,
-                    st_owner_username: username,
-                    st_owner_password: hash,
-                };
-                field = 'st_owner_id';
-                break;
-            case 3: // Staff
-                table = 'staff';
-                data = {
-                    staff_fname: fname,
-                    staff_lname: lname,
-                    staff_type: staff_type,
-                    staff_phone_num: phone,
-                    staff_gender: gender,
-                    staff_username: username,
-                    staff_password: hash,
-                };
-                field = 'staff_id';
-                break;
-            default:
-                Logs.error(`Unknown type received: ${type}`);
-                return res.status(400).json({ error: 'Invalid user type!' });
-        }
-
-        const [user] = await db(table)
-            .insert(data)
-            .returning([field]);
-
-        const token = GenerateToken(user[field], type);
+        const token = GenerateToken(user[config.field], type);
 
         await db('authentication')
-            .insert({ userid: user[field], token })
+            .insert({ userid: user[config.field], token })
             .onConflict('userid')
             .merge({ token, created_at: db.fn.now() });
 
         res.json({ message: 'User Registered Successfully!', token });
-        Logs.http(`Response being sent: User Registered Successfully! User ID: ${user.id} | Token: ${token}` );
+        Logs.http(`Response being sent: User Registered Successfully! User ID: ${user[config.field]} | Token: ${token}`);
     } catch (error) {
         res.status(500).json({ error: error.message });
         Logs.error(`Response being sent: ${error.message}`);
     }
 });
+
 
 app.post('/login', async(req, res) => {
     Logs.http('Received POST request to /login');
