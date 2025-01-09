@@ -2,10 +2,10 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
 const type_enum = [
-    0,
-    1,
-    2,
-    3
+    0, //Admin
+    1, //Customer
+    2, //Water Refilling Owner
+    3 // Staff
 ];
 
 const channels = [

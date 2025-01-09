@@ -30,7 +30,7 @@ const LOG_LEVEL = {
 
 winston.addColors(LOG_LEVEL.colors);
 
-const directory = path.join(__dirname, 'Logs');
+const directory = path.join(__dirname, '../Logs');
 if (!fs.existsSync(directory)) {
     fs.mkdirSync(directory);
 }

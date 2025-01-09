@@ -4,11 +4,10 @@ const bcrypt = require('bcryptjs');
 const os = require('os');
 const axios = require('axios');
 const WebSocket = require('ws');
-const Logs = require('./Logs');
-const { Connect, pool, Stop } = require('./db');
-const { type_enum, GenerateToken, SecretKey, channels } = require('./lib');
+const Logs = require('./includes/Logs');
+const { db, Connect, Stop } = require('./includes/database');
+const { type_enum, GenerateToken, channels } = require('./includes/lib');
 const cors = require('cors');
-const { createSecretKey } = require('crypto');
 
 const port = 3000;
 
@@ -43,29 +42,29 @@ sockets.on('connection', (socket) => {
 });
 
 app.post('/register', async(req, res) => {
-    Logs.http('Recieved POST request to /register' );
-    Logs.http(`Request Body: ${req.body}` );
-    Logs.http(`Request headers: ${req.headers}` );
-    Logs.http(`Incoming Remote Address: ${req.ip || req.socket.remoteAddress}` );
+    Logs.http('Received POST request to /register');
+    Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
+    Logs.http(`Request Headers: ${JSON.stringify(req.headers)}`);
+    Logs.http(`Incoming Remote Address: ${req.ip || req.socket.remoteAddress}`);
 
-    const { fname, lname, address, phone, gender, username, password, long, lang, type } = req.body;
+    const { fname, lname, staff_type, address, phone, gender, username, password, long, lang, type } = req.body;
 
-    if(!fname
-        || !lname
-        || !address
-        || !phone
-        || !gender
-        || !username
-        || !password
-        || !long
-        || !lang
-        || !type
-    ) {
-        Logs.warning(`Response being sent: All Fields are require! | status: 400` );
-        return res.status(400).json({
-            error: 'All Fields are require!'
-        });
-    }
+    // if(!fname
+    //     || !lname
+    //     || !address
+    //     || !phone
+    //     || !gender
+    //     || !username
+    //     || !password
+    //     || !long
+    //     || !lang
+    //     || !type
+    // ) {
+    //     Logs.warning(`Response being sent: All Fields are require! | status: 400` );
+    //     return res.status(400).json({
+    //         error: 'All Fields are require!'
+    //     });
+    // }
 
     if(!type_enum.includes(type)) {
         Logs.error(`Response being sent: Invalid user type! | status: 400` );
@@ -77,38 +76,64 @@ app.post('/register', async(req, res) => {
     try {
         const hash = await bcrypt.hash(password, 10);
 
-        let query, data, user;
+        let table, data, field;
 
-        switch(type) {
+        switch (type) {
             case 1: // Customer
-                query = 'INSERT INTO public."Customer" (customer_fname, customer_lname, customer_phone_num, customer_address, customer_gender, customer_username, customer_password, customer_address_long, customer_address_lat) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING customer_id AS id';
-                data = [fname, lname, phone, address, gender, username, hash, long, lang];
+                table = 'Customer';
+                data = {
+                    customer_fname: fname,
+                    customer_lname: lname,
+                    customer_phone_num: phone,
+                    customer_address: address,
+                    customer_gender: gender,
+                    customer_username: username,
+                    customer_password: hash,
+                    customer_address_long: long,
+                    customer_address_lat: lang,
+                };
+                field = 'customer_id';
                 break;
             case 2: // Owner
-                query = "INSERT INTO public.station_owner (st_owner_fname, st_owner_lname, st_owner_phone_num, st_owner_gender, st_owner_username, st_owner_password) VALUES ($1, $2, $3, $4, $5, $6) RETURNING st_owner_id AS id";
-                data = [fname, lname, phone, gender, username, hash];
+                table = 'station_owner';
+                data = {
+                    st_owner_fname: fname,
+                    st_owner_lname: lname,
+                    st_owner_phone_num: phone,
+                    st_owner_gender: gender,
+                    st_owner_username: username,
+                    st_owner_password: hash,
+                };
+                field = 'st_owner_id';
                 break;
             case 3: // Staff
-                query = "INSERT INTO public.staff (staff_fname, staff_lname, staff_phone_num, staff_gender, staff_username, staff_password) VALUES ($1, $2, $3, $4, $5, $6) RETURNING staff_id AS id";
-                data = [fname, lname, phone, gender, username, hash];
+                table = 'staff';
+                data = {
+                    staff_fname: fname,
+                    staff_lname: lname,
+                    staff_type: staff_type,
+                    staff_phone_num: phone,
+                    staff_gender: gender,
+                    staff_username: username,
+                    staff_password: hash,
+                };
+                field = 'staff_id';
                 break;
+            default:
+                Logs.error(`Unknown type received: ${type}`);
+                return res.status(400).json({ error: 'Invalid user type!' });
         }
 
-        const result = await pool.query(query, data);
+        const [user] = await db(table)
+            .insert(data)
+            .returning([field]);
 
-        user = result.rows[0];
+        const token = GenerateToken(user[field], type);
 
-        const token = GenerateToken(user.id, type);
-
-        const tokenQuery = `
-            INSERT INTO public.authentication (userid, token)
-            VALUES ($1, $2)
-            ON CONFLICT (userid) 
-            DO UPDATE SET token = $2, created_at = CURRENT_TIMESTAMP
-            RETURNING userid;
-        `;
-
-        await pool.query(tokenQuery, [user.id, token]);
+        await db('authentication')
+            .insert({ userid: user[field], token })
+            .onConflict('userid')
+            .merge({ token, created_at: db.fn.now() });
 
         res.json({ message: 'User Registered Successfully!', token });
         Logs.http(`Response being sent: User Registered Successfully! User ID: ${user.id} | Token: ${token}` );
@@ -121,6 +146,7 @@ app.post('/register', async(req, res) => {
 app.post('/login', async(req, res) => {
     Logs.http('Received POST request to /login');
     Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
+    Logs.http(`Request Headers: ${JSON.stringify(req.headers)}`);
     Logs.http(`Incoming Remote Address: ${req.ip || req.socket.remoteAddress}`);
 
     const { username, password, type } = req.body;
@@ -142,54 +168,64 @@ app.post('/login', async(req, res) => {
         });
     }
 
-    Logs.debug(`Incoming Type: ${type}`);
-
     try {
-        let query, user;
+        let table, field, user, pass;
 
-        switch(type) {
+        switch (type) {
             case 0: // Admin
-                query = "SELECT app_owner_id AS id, app_owner_password AS password FROM public.app_owner WHERE staff_username = $1";
+                table = 'app_owner';
+                field = 'app_owner_id';
+                pass = 'app_owner_password';
+                user = 'staff_username';
                 break;
             case 1: // Customer
-                query = 'SELECT customer_id AS id, customer_password AS password FROM public."Customer" WHERE customer_username = $1';
+                table = 'Customer';
+                field = 'customer_id';
+                pass = 'customer_password';
+                user = 'customer_username';
                 break;
             case 2: // Owner
-                query = "SELECT st_owner_id AS id, st_owner_password AS password FROM public.station_owner WHERE st_owner_username = $1";
+                table = 'userstation_owner';
+                field = 'st_owner_id';
+                pass = 'st_owner_password';
+                user = 'st_owner_username';
                 break;
             case 3: // Staff
-                query = "SELECT staff_id AS id, staff_password AS password FROM public.staff WHERE staff_username = $1";
+                table = 'staff';
+                field = 'staff_id';
+                pass = 'staff_password';
+                user = 'staff_username';
                 break;
+            default:
+                Logs.error('Invalid user type provided.');
+                return res.status(400).json({ error: 'Invalid user type!' });
         }
 
-        const result = await pool.query(query, [username]);
+        const data = await db(table)
+            .select({ id: field, password: pass })
+            .where(user, username)
+            .first();
 
-        if(result.rows.length === 0) {
+        if (!data) {
             Logs.error(`Response being sent: User not found! | status: 404`);
             return res.status(404).json({ error: 'User not found!' });
         }
 
-        user = result.rows[0];
+        const isPasswordValid = await bcrypt.compare(password, data.password);
 
-        const same = await bcrypt.compare(password, user.password);
-        if(!same) {
+        if (!isPasswordValid) {
             Logs.debug(`Response being sent: Invalid credentials! | status: 401`);
             return res.status(401).json({ error: 'Invalid credentials!' });
         }
 
-        const token = GenerateToken(user.id, type);
+        const token = GenerateToken(data.id, type);
 
-        const tokenQuery = `
-            INSERT INTO public.authentication (userid, token)
-            VALUES ($1, $2)
-            ON CONFLICT (userid) 
-            DO UPDATE SET token = $2, created_at = CURRENT_TIMESTAMP
-            RETURNING userid;
-        `;
-
-        await pool.query(tokenQuery, [user.id, token]);
+        await db('authentication')
+            .insert({ userid: data.id, token })
+            .onConflict('userid')
+            .merge({ token, created_at: db.fn.now() });
         
-        Logs.http(`Response being sent: Login successful for UserID: ${user.id} | Token: ${token}`);
+        Logs.http(`Response being sent: Login successful for UserID: ${data.id} | Token: ${token}`);
         res.json({ message: 'Login successful!', token });
     }
     catch(error) {
@@ -201,6 +237,7 @@ app.post('/login', async(req, res) => {
 app.post('/logout', async(req, res) => {
     Logs.http('Received POST request to /logout');
     Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
+    Logs.http(`Request Headers: ${JSON.stringify(req.headers)}`);
     Logs.http(`Incoming Remote Address: ${req.ip || req.socket.remoteAddress}`);
 
     const { userid, token } = req.body;
@@ -210,37 +247,24 @@ app.post('/logout', async(req, res) => {
     }
 
     try {
-        const query = "SELECT * FROM public.authentication WHERE userid = $1 AND token = $2";
-        const result = await pool.query(query, [userid, token]);
+        const result = await db('authentication')
+            .select('*')
+            .where({ userid, token })
+            .first();
 
-        if(result.rows.length === 0) {
+        if(!result) {
             Logs.error(`Response being sent: Invalid token! | status: 401`);
             return res.status(401).json({ error: 'Invalid token!' });
         }
 
-        const deleteQuery = "DELETE FROM public.authentication WHERE userid = $1";
-        await pool.query(deleteQuery, [userid]);
+        await db('authentication')
+            .where({ userid })
+            .delete();
 
         Logs.http(`Response being sent: User logged out successfully for UserID: ${userid}`);
         res.json({ message: 'Logout successful!' });
     }
     catch(error) {
-        res.status(500).json({ error: error.message });
-        Logs.error(`Response being sent: ${error.message}`);
-    }
-});
-
-//testing
-app.get('/test/:id', async(req, res) => {
-    const id = req.params.id;
-
-    try {
-        let query = 'SELECT * FROM public."Customer"';
-        const result = await pool.query(query);
-
-        Logs.http(`Response being sent:  ${JSON.stringify(result.rows)}`);
-        res.json({ message: result.rows });
-    } catch(error) {
         res.status(500).json({ error: error.message });
         Logs.error(`Response being sent: ${error.message}`);
     }
