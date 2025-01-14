@@ -4,9 +4,9 @@ const bcrypt = require('bcryptjs');
 const os = require('os');
 const axios = require('axios');
 const WebSocket = require('ws');
-const Logs = require('./includes/Logs');
-const { db, Connect, Stop } = require('./includes/database');
-const { type_enum, GenerateToken, channels } = require('./includes/lib');
+const Logs = require('./utils/Logs');
+const { db, Connect, Stop } = require('./config/database');
+const { type_enum, GenerateToken, channels } = require('./utils/lib');
 const cors = require('cors');
 
 const port = 3000;

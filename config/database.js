@@ -1,5 +1,5 @@
 const knex = require('knex');
-const Logs = require('./Logs');
+const Logs = require('../utils/Logs');
 
 require('dotenv').config();
 
