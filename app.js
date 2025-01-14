@@ -264,6 +264,41 @@ app.post('/logout', async(req, res) => {
     }
 });
 
+/**
+ * Starts the application server and logs the local and public host information.
+ *
+ * @param {number} port - The port number on which the server will listen.
+ * @returns {Promise<void>} A promise that resolves when the server is successfully started.
+ *
+ * @example
+ * app.listen(3000, async () => {
+ *     // Server is running on port 3000
+ * });
+ *
+ * @function localhost
+ * @returns {string|null} The local IPv4 address of the machine, or null if not found.
+ *
+ * @function public
+ * @returns {Promise<string|null>} A promise that resolves to the public IP address of the machine, or null if an error occurs.
+ *
+ * @async
+ * @throws {Error} If there is an error while fetching the public IP address.
+ *
+ * Logs the following information:
+ * - Local Host: The local IPv4 address of the machine.
+ * - Public Host: The public IP address fetched from the ipify API.
+ * - Port: The port number on which the server is listening.
+ *
+ * @example
+ * Logs.info(`Local Host: ${localhost()}`);
+ * Logs.info(`Public Host: ${publichost}`);
+ * Logs.info(`Port: ${port}`);
+ *
+ * @async
+ * @function Connect
+ * @param {Array} channels - An array of channels to connect to.
+ * @returns {Promise<void>} A promise that resolves when the connection is established.
+ */
 app.listen(port, async() => {
     const localhost = () => {
         const network = os.networkInterfaces();

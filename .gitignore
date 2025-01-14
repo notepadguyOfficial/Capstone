@@ -1,6 +1,7 @@
 Logs/
 .git/
 node_modules/
+.vscode/
 
 *.logs
 *.bak

@@ -45,6 +45,12 @@ catch(error) {
     console.error('Error creating log directory:', error);
 }
 
+/**
+ * Creates a filter for log levels.
+ * 
+ * @param {string|string[]} levels - The log level(s) to filter.
+ * @returns {Function} A winston format function that filters log messages based on the specified levels.
+ */
 const createFilter = (levels) =>
     winston.format((info) => {
         if (Array.isArray(levels) ? levels.includes(info.level) : info.level === levels) {
@@ -53,12 +59,25 @@ const createFilter = (levels) =>
         return false;
     })();
 
+/**
+ * Combines multiple winston format functions into a single format function.
+ * 
+ * @type {Format}
+ */
 const formatter = winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD hh:mm:ss.SSS A' }),
     winston.format.align(),
     winston.format.printf((info) => `[${info.level}] [${info.timestamp}]: ${info.message}`)
 );
 
+/**
+ * Creates a new DailyRotateFile transport for winston logger.
+ * 
+ * @param {string} filename - The base name of the log file.
+ * @param {string} level - The log level for the transport.
+ * @param {string|string[]} filtered - The log level(s) to filter.
+ * @returns {DailyRotateFile} A new DailyRotateFile transport.
+ */
 const Transport = (filename, level, filtered) =>
     new DailyRotateFile({
         filename: path.join(directory, `${filename}_%DATE%.log`),
@@ -70,6 +89,11 @@ const Transport = (filename, level, filtered) =>
         format: winston.format.combine(createFilter(filtered), formatter),
     });
 
+/**
+ * Creates a new winston logger with specified levels and transports.
+ * 
+ * @type {Logger}
+ */
 const Logs = winston.createLogger({
     levels: LOG_LEVEL.levels,
     level: 'database',
