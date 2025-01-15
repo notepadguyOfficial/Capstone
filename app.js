@@ -18,11 +18,37 @@ app.use(cors());
 
 app.use(bodyParser.json());
 
+/**
+ * Middleware function to log HTTP requests.
+ * 
+ * @param {Object} req - The request object.
+ * @param {string} req.method - The HTTP method of the request.
+ * @param {string} req.url - The URL of the request.
+ * @param {Object} res - The response object.
+ * @param {function} next - The next middleware function in the application's request-response cycle.
+ * @returns {void}
+ */
 app.use((req, res, next) => {
     Logs.http(`${req.method} ${req.url}`);
     next();
 });
 
+
+/**
+ * Handles WebSocket connections and manages notifications from PostgreSQL.
+ * 
+ * @param {WebSocket} socket - The WebSocket connection object.
+ * @returns {void}
+ * 
+ * @listens WebSocket#connection
+ * @listens pool#notification
+ * @listens WebSocket#close
+ * 
+ * @description
+ * This function sets up event listeners for WebSocket connections. It logs when a client
+ * connects, forwards PostgreSQL notifications to the client, and handles client disconnections.
+ * When all clients disconnect, it stops listening to PostgreSQL channels.
+ */
 sockets.on('connection', (socket) => {
     Logs.http('WebSocket client connected.');
 
@@ -41,6 +67,30 @@ sockets.on('connection', (socket) => {
     });
 });
 
+
+/**
+ * Handles user registration for different types of users (Customer, Owner, Staff).
+ * 
+ * @async
+ * @function
+ * @param {Object} req - Express request object.
+ * @param {Object} req.body - The request body containing user registration data.
+ * @param {string} req.body.fname - First name of the user.
+ * @param {string} req.body.lname - Last name of the user.
+ * @param {string} [req.body.staff_type] - Type of staff (required for staff registration).
+ * @param {string} [req.body.address] - Address of the user (required for customer registration).
+ * @param {string} req.body.phone - Phone number of the user.
+ * @param {string} req.body.gender - Gender of the user.
+ * @param {string} req.body.username - Username for the new account.
+ * @param {string} req.body.password - Password for the new account.
+ * @param {number} [req.body.long] - Longitude of the user's address (required for customer registration).
+ * @param {number} [req.body.lang] - Latitude of the user's address (required for customer registration).
+ * @param {number} req.body.type - Type of user (1: Customer, 2: Owner, 3: Staff).
+ * @param {Object} res - Express response object.
+ * @returns {Promise<void>} - A promise that resolves when the registration process is complete.
+ * 
+ * @throws {Error} Will throw an error if the registration process fails.
+ */
 app.post('/register', async (req, res) => {
     Logs.http('Received POST request to /register');
     Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
@@ -137,6 +187,27 @@ app.post('/register', async (req, res) => {
 });
 
 
+
+/**
+ * Handles user login for different types of users (Admin, Customer, Owner, Staff).
+ * 
+ * @async
+ * @function
+ * @param {Object} req - Express request object.
+ * @param {Object} req.body - The request body containing login data.
+ * @param {string} req.body.username - The username of the user trying to log in.
+ * @param {string} req.body.password - The password of the user trying to log in.
+ * @param {number} req.body.type - The type of user (0: Admin, 1: Customer, 2: Owner, 3: Staff).
+ * @param {Object} res - Express response object.
+ * @returns {Promise<void>} - A promise that resolves when the login process is complete.
+ * 
+ * @throws {Error} Will throw an error if the login process fails.
+ * 
+ * @description
+ * This function validates the login credentials, checks the user type,
+ * verifies the password, generates a token upon successful login,
+ * and updates the authentication table with the new token.
+ */
 app.post('/login', async(req, res) => {
     Logs.http('Received POST request to /login');
     Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
@@ -218,7 +289,7 @@ app.post('/login', async(req, res) => {
             .insert({ userid: data.id, token })
             .onConflict('userid')
             .merge({ token, created_at: db.fn.now() });
-        
+
         Logs.http(`Response being sent: Login successful for UserID: ${data.id} | Token: ${token}`);
         res.json({ message: 'Login successful!', token });
     }
@@ -228,6 +299,25 @@ app.post('/login', async(req, res) => {
     }
 });
 
+
+/**
+ * Handles user logout by invalidating the authentication token.
+ * 
+ * @async
+ * @function
+ * @param {Object} req - Express request object.
+ * @param {Object} req.body - The request body containing logout data.
+ * @param {string} req.body.userid - The user ID of the user logging out.
+ * @param {string} req.body.token - The authentication token to be invalidated.
+ * @param {Object} res - Express response object.
+ * @returns {Promise<void>} - A promise that resolves when the logout process is complete.
+ * 
+ * @throws {Error} Will throw an error if the logout process fails.
+ * 
+ * @description
+ * This function validates the provided user ID and token, checks if they exist in the authentication table,
+ * removes the authentication entry if valid, and sends appropriate responses based on the outcome.
+ */
 app.post('/logout', async(req, res) => {
     Logs.http('Received POST request to /logout');
     Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
@@ -235,7 +325,7 @@ app.post('/logout', async(req, res) => {
     Logs.http(`Incoming Remote Address: ${req.ip || req.socket.remoteAddress}`);
 
     const { userid, token } = req.body;
-    
+
     if(!userid || !token) {
         return res.status(400).json({ error: 'User ID and Token are required for logout' });
     }
@@ -263,6 +353,7 @@ app.post('/logout', async(req, res) => {
         Logs.error(`Response being sent: ${error.message}`);
     }
 });
+
 
 /**
  * Starts the application server and logs the local and public host information.
