@@ -108,7 +108,7 @@ app.post('/register', async (req, res) => {
 
     const fieldConfigs = {
         1: { // Customer
-            requiredFields: ['fname', 'lname', 'address', 'phone', 'gender', 'username', 'password', 'long', 'lang'],
+            requiredFields: ['fname', 'lname', 'address', 'phone', 'gender', 'username', 'password', 'lng', 'lat'],
             table: 'Customer',
             data: {
                 customer_fname: fname,
@@ -118,8 +118,8 @@ app.post('/register', async (req, res) => {
                 customer_gender: gender,
                 customer_username: username,
                 customer_password: null, // Placeholder for hashed password
-                customer_address_long: long,
-                customer_address_lat: lang,
+                customer_address_long: lng,
+                customer_address_lat: lat,
             },
             field: 'customer_id',
         },
