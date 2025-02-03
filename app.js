@@ -8,8 +8,10 @@ const Logs = require('./utils/Logs');
 const { db, Connect, Stop } = require('./config/database');
 const { type_enum, GenerateToken, channels } = require('./utils/lib');
 const cors = require('cors');
+require('dotenv').config();
 
-const port = 3000;
+// const port = 3000;
+const port = process.env.SERVER_PORT;
 
 const app = express();
 const sockets = new WebSocket.Server({ noServer: true });
