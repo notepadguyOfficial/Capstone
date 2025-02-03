@@ -356,6 +356,48 @@ app.post('/logout', async(req, res) => {
     }
 });
 
+// Orders
+
+app.post('/feedback', async(req, res) => {
+    Logs.http('Received POST request to /feedback');
+    Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
+    Logs.http(`Request Headers: ${JSON.stringify(req.headers)}`);
+    Logs.http(`Incoming Remote Address: ${req.ip || req.socket.remoteAddress}`);
+
+    const { rating, comment, order_id } = req.body;
+
+    if(!rating
+        || !comment
+    ) {
+        Logs.warning(`Response being sent: All Fields are require! | status: 400` );
+        return res.status(400).json({
+            error: 'All Fields are require!'
+        });
+    }
+    try {
+        let query = {
+            table: 'feedback',
+            data: {
+                feedback_rating : rating,
+                feedback_description: comment,
+                order_id: order_id,
+            },
+            field: 'feedback_id',
+        }
+
+        const [user] = await db(query.table)
+            .insert(query.data)
+            .returning([query.field]);
+
+        res.json({ message: 'Successfully sent Feedback!' });
+        Logs.http(`Response being sent: Successfully sent Feedback!`);
+    }
+    catch(error) {
+        res.status(500).json({ error: error.message });
+        Logs.error(`Response being sent: ${error.message}`);
+    }
+});
+
 
 /**
  * Starts the application server and logs the local and public host information.
