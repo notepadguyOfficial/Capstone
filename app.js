@@ -358,6 +358,24 @@ app.post('/logout', async(req, res) => {
 
 // Orders
 
+/**
+ * Handles POST requests to the /feedback endpoint.
+ *
+ * This endpoint receives feedback data from the request body, validates it,
+ * and inserts it into the database. Logs are generated for the request and response.
+ *
+ * @param {Object} req - The request object from the client.
+ * @param {Object} req.body - The body of the request containing feedback data.
+ * @param {number} req.body.rating - The rating provided by the customer (1-5).
+ * @param {string} req.body.comment - The comment provided by the customer.
+ * @param {number} req.body.order_id - The ID of the related order.
+ * @param {Object} req.headers - The headers of the request.
+ * @param {string} req.ip - The IP address of the client.
+ * @param {Object} req.socket - The socket object containing the remote address.
+ * @param {Object} res - The response object to send the response back to the client.
+ *
+ * @returns {void} - Sends a JSON response with a success message or an error message.
+ */
 app.post('/feedback', async(req, res) => {
     Logs.http('Received POST request to /feedback');
     Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
@@ -385,7 +403,7 @@ app.post('/feedback', async(req, res) => {
             field: 'feedback_id',
         }
 
-        const [user] = await db(query.table)
+        const [feedback] = await db(query.table)
             .insert(query.data)
             .returning([query.field]);
 
