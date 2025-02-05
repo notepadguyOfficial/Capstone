@@ -1,6 +1,6 @@
 -- ENUM TYPES
 CREATE TYPE gender AS ENUM ('Male', 'Female');
-CREATE TYPE order_status_enum AS ENUM ('Accepted', 'On Route', 'Completed', 'Cancelled');
+CREATE TYPE order_status_enum AS ENUM ('Accepted', 'On-Route', 'Completed', 'Cancelled');
 CREATE TYPE order_service_enum AS ENUM ('On the Day', 'Pre-Order');
 CREATE TYPE order_enum AS ENUM ('Delivery', 'Pick-Up');
 CREATE TYPE payment_method_enum AS ENUM ('Cash', 'GCash', 'Maya');
