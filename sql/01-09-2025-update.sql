@@ -89,7 +89,7 @@ ALTER TYPE public.order_service_enum OWNER TO postgres;
 
 CREATE TYPE public.order_status_enum AS ENUM (
     'Accepted',
-    'On Route',
+    'On-Route',
     'Completed',
     'Cancelled'
 );
