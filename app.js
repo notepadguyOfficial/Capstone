@@ -8,9 +8,9 @@ const Logs = require('./utils/Logs');
 const { type_enum, GenerateToken, channels } = require('./utils/lib');
 const cors = require('cors');
 const routes = require('./endpoints/routes.js');
+const { db, Connect, Stop } = require('./config/database');
 require('dotenv').config();
 
-// const port = 3000;
 const port = process.env.SERVER_PORT;
 
 const app = express();

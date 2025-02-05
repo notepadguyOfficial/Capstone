@@ -1,37 +1,42 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/javascript-node-postgres
 {
-	"name": "Node.js & PostgreSQL",
-	"dockerComposeFile": "docker-compose.yml",
-	"service": "app",
-	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-	"features": {
-		"ghcr.io/devcontainers/features/docker-in-docker:2": {}
-	},
-	"forwardPorts": [
-		3000,
-		5432,
-		5050
-	],
-	"postCreateCommand": "npm install && npm install -g nodemon",
-	"customizations": {
-		"codespaces": {
-			"openFiles": [
-				"README.md",
-				"app.js"
-			]
-		},
-		"vscode": {
-			"extensions": [
-				"dbaeumer.vscode-eslint",
-				"esbenp.prettier-vscode",
-				"streetsidesoftware.code-spell-checker",
-				"ms-azuretools.vscode-docker"
-			]
-		}
-	},
-	"mounts": [
-		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
-	],
-	"remoteUser": "root"
-}
+    "name": "Node.js, PostgreSQL, and PGAdmin",
+    "image": "mcr.microsoft.com/vscode/devcontainers/javascript-node:0-18",
+    "features": {
+      "docker-in-docker": "latest"
+    },
+    "postCreateCommand": "npm install",
+    "forwardPorts": [
+      3000,
+      5432,
+      5050
+    ],
+    "mounts": [
+      "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+    ],
+    "customizations": {
+        "settings": {
+            "terminal.integrated.shell.linux": "/bin/bash"
+        },
+        "vscode": {
+            "extensions": [
+                "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode",
+                "ms-azuretools.vscode-docker"
+            ]
+        }
+    },
+    "portsAttributes": {
+      "3000": {
+        "label": "Node.js Server"
+      },
+      "5432": {
+        "label": "PostgreSQL"
+      },
+      "5050": {
+        "label": "PGAdmin"
+      }
+    },
+    "remoteUser": "root"
+  }

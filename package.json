@@ -1,5 +1,5 @@
 {
-  "name": "web",
+  "name": "capstone",
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
@@ -8,7 +8,7 @@
     "dev": "nodemon app.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "NotepadguyOfficial",
   "license": "ISC",
   "type": "commonjs",
   "description": "",
@@ -16,13 +16,14 @@
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
+    "capstone": "file:",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "knex": "^3.1.0",
+    "multer": "^1.4.5-lts.1",
     "pg": "^8.13.1",
-    "web": "file:",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0",
     "ws": "^8.18.0"

@@ -737,7 +737,7 @@ router.post('/feedback', async(req, res) => {
  * 
  * @returns {Promise<void>} Sends a JSON response indicating the upload status of the GCash QR code.
  */
-app.post('/upload-qrcode-gcash', upload.single('gcash_qr'), async (req, res) => {
+router.post('/upload-qrcode-gcash', upload.single('gcash_qr'), async (req, res) => {
     Logs.http('Received POST request to /feedback');
     Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
     Logs.http(`Request Headers: ${JSON.stringify(req.headers)}`);
@@ -786,7 +786,7 @@ app.post('/upload-qrcode-gcash', upload.single('gcash_qr'), async (req, res) => 
  * 
  * @returns {Promise<void>} Sends a JSON response indicating the upload status of the PayMaya QR code.
  */
-app.post('/upload-qrcode-maya', upload.single('maya_qr'), async (req, res) => {
+router.post('/upload-qrcode-maya', upload.single('maya_qr'), async (req, res) => {
     Logs.http('Received POST request to /feedback');
     Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
     Logs.http(`Request Headers: ${JSON.stringify(req.headers)}`);
