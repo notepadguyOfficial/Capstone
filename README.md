@@ -50,7 +50,12 @@ Hydro App is a mobile platform designed to streamline sales, orders, delivery, a
 3. **Set up the database:**
     - Ensure PostgreSQL is installed and running.
     - Create a new database.
-    - Run the SQL scripts located in the sql directory to set up the necessary tables.
+    - Run the SQL scripts located in the `sql` directory to set up the necessary tables.
+    - Use the `base.sql` file from the `sql` folder to restore the backup:
+      ```bash
+      psql -U your_username -d your_database -f sql/base.sql
+      ```
+    - Alternatively, you can query the code inside `base.sql` directly in your PostgreSQL client.
 
 ## Configuration
 
@@ -61,11 +66,11 @@ Hydro App is a mobile platform designed to streamline sales, orders, delivery, a
 
 1. **Start the application:**
     ```bash
-    npm start
+    npm run start #normal start
     ```
     or
     ```bash
-    nodemon app.js
+    npm run dev #nodemon for development
     ```
 
 2. **Access the application:**
