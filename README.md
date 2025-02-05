@@ -89,5 +89,11 @@ Hydro App is a mobile platform designed to streamline sales, orders, delivery, a
      docker-compose up -d
      ```
 
-3. **Access the application:**
-   - The application will be accessible on the forwarded ports specified in the  file.
+3. **Stop the application:**
+   - If you want to stop developing, run the following command:
+     ```bash
+     docker-compose down
+     ```
+
+4. **Access the application:**
+   - The application will be accessible on the forwarded ports specified in the [devcontainer.json](http://_vscodecontentref_/1) file.
