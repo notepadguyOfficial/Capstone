@@ -7,6 +7,7 @@
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Usage](#usage)
+- [Codespaces](#codespaces)
 
 ## Introduction
 
@@ -73,3 +74,20 @@ Hydro App is a mobile platform designed to streamline sales, orders, delivery, a
 ## Tools
 1. **Postman**
     - [Download Link](https://dl.pstmn.io/download/latest/win64)
+
+## Codespaces
+
+1. **Create a Codespace:**
+   - Open the repository on GitHub.
+   - Click on the `Code` button and select `Open with Codespaces`.
+   - Follow the prompts to create a new Codespace.
+
+2. **Launch the application:**
+   - Once the Codespace is ready, open the terminal.
+   - Run the following command to start the application:
+     ```bash
+     docker-compose up -d
+     ```
+
+3. **Access the application:**
+   - The application will be accessible on the forwarded ports specified in the  file.
