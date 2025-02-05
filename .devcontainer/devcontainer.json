@@ -6,9 +6,14 @@
 	"service": "app",
 	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
 	"features": {
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {},
 		"ghcr.io/devcontainers-extra/features/jshint:2": {}
 	},
-	"forwardPorts": [3000, 5432],
+	"forwardPorts": [
+		3000,
+		5432,
+		5050
+	],
 	"postCreateCommand": "npm install && npm install -g nodemon",
 	"customizations": {
 		"codespaces": {
@@ -22,24 +27,12 @@
 				"dbaeumer.vscode-eslint",
 				"esbenp.prettier-vscode",
 				"streetsidesoftware.code-spell-checker",
-				"mtxr.sqltools",
-				"mtxr.sqltools-driver-pg"
-			],
-			"settings": {
-				"sqltools.connections": [
-					{
-						"previewLimit": 100,
-						"server": "postgres",
-						"port": 5432,
-						"driver": "PostgreSQL",
-						"name": "postgres",
-						"database": "postgres",
-						"username": "postgres",
-						"password": "postgres"
-					}
-				]
-			}
+				"ms-azuretools.vscode-docker"
+			]
 		}
 	},
-	"remoteUser": "vscode"
+	"mounts": [
+		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+	],
+	"remoteUser": "root"
 }
