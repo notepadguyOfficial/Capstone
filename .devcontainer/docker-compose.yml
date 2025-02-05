@@ -22,7 +22,7 @@ services:
       - db
 
   pgadmin:
-    image: dpage/pgadmin4:8.9
+    image: dpage/pgadmin4:latest
     restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: devteds@pgadmin.org
