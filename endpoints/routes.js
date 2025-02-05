@@ -2,9 +2,38 @@ const express = require('express');
 const router = express.Router();
 const Logs = require('../utils/Logs');
 const { db, Connect, Stop } = require('../config/database');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 // #region Water Refilling Stations
 
+// 02-05-2025 3:16 PM 
+
+/**
+ * POST /register-wrs
+ * 
+ * This endpoint registers a new water refilling station.
+ * 
+ * @async
+ * @function
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.name - Name of the water refilling station
+ * @param {string} req.body.address - Address of the water refilling station
+ * @param {string} req.body.phone_num - Phone number of the water refilling station
+ * @param {string} req.body.lng - Longitude of the water refilling station
+ * @param {string} req.body.lat - Latitude of the water refilling station
+ * @param {string} [req.body.station_paymaya_acc] - PayMaya account of the water refilling station (optional)
+ * @param {string} [req.body.station_gcash_qr] - GCash QR code of the water refilling station (optional)
+ * @param {string} [req.body.station_paymaya_qr] - PayMaya QR code of the water refilling station (optional)
+ * @param {Object} res - Express response object
+ * 
+ * @returns {Promise<void>} Sends a JSON response indicating the registration status of the water refilling station.
+ */
 router.post('/register-wrs', async (req, res) => {
     Logs.http('Received POST request to /register');
     Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
@@ -52,31 +81,22 @@ router.post('/register-wrs', async (req, res) => {
 });
 
 /**
- * POST /get-wrs
+ * GET /get-wrs
  * 
  * This endpoint retrieves all water refilling stations.
  * 
  * @async
  * @function
  * @param {Object} req - Express request object
- * @param {Object} req.body - Request body
- * @param {number} req.body.ws_id - Workspace ID
  * @param {Object} res - Express response object
  * 
  * @returns {Promise<void>} Sends a JSON response with the retrieved water refilling stations or an error message.
  */
-router.post('/get-wrs', async(req, res) => {
+router.get('/get-wrs', async(req, res) => {
     Logs.http('Received POST request to /feedback');
     Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
     Logs.http(`Request Headers: ${JSON.stringify(req.headers)}`);
     Logs.http(`Incoming Remote Address: ${req.ip || req.socket.remoteAddress}`);
-
-    const { ws_id } = req.body;
-
-    if(!ws_id) {
-        Logs.warning(`Response being sent: Missing Required Data for Query! | status: 400` );
-        return res.status(400).json({ error: 'Missing Required Data for Query!' });
-    }
 
     try {
         const { result } = await db('water_refilling_station')
@@ -86,8 +106,24 @@ router.post('/get-wrs', async(req, res) => {
             Logs.error(`Empty Water Refilling Stations! | status: 200`);
             return res.status(200).json({ message: "Empty Water Refilling Stations!" });
         }
+
+        const json_map = result.map(station => ({
+            station_id: result.station_id,
+            station_name: result.station_name,
+            station_address: result.station_address,
+            station_phone_num: result.station_phone_num,
+            station_longitude: result.station_longitude,
+            station_latitude: result.station_latitude,
+            station_paymaya_acc: result.station_paymaya_acc,
+            station_gcash_qr: result.station_gcash_qr
+                ? `/public/${result.station_id}/img/qr/${path.basename(result.station_gcash_qr)}`
+                : null,
+            station_paymaya_qr: result.station_paymaya_qr
+                ? `/public/${result.station_id}/img/qr/${path.basename(result.station_paymaya_qr)}`
+                : null,
+        }));
         
-        res.status(200).json({ message: "Successfully retrieved Water Refilling Station!", data: result });
+        res.status(200).json({ message: "Successfully retrieved Water Refilling Station!", data: json_map });
         Logs.http(`Response being sent: Successfully retrieved Water Refilling Station!`);
     }
     catch(error) {
@@ -97,7 +133,7 @@ router.post('/get-wrs', async(req, res) => {
 });
 
 /**
- * POST /get-wrs-details
+ * GET /get-wrs-details
  * 
  * This endpoint retrieves the details of a specific water refilling station based on the provided station_id.
  * 
@@ -110,7 +146,7 @@ router.post('/get-wrs', async(req, res) => {
  * 
  * @returns {Promise<void>} Sends a JSON response with the retrieved water refilling station details or an error message.
  */
-router.post('/get-wrs-datails', async(req, res) => {
+router.get('/get-wrs-datails', async(req, res) => {
     Logs.http('Received POST request to /feedback');
     Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
     Logs.http(`Request Headers: ${JSON.stringify(req.headers)}`);
@@ -133,11 +169,104 @@ router.post('/get-wrs-datails', async(req, res) => {
             Logs.error(`Water Refilling Station doesn't Exists! | status: 404`);
             return res.status(404).json({ message: "Water Refilling Station doesn't Exists!" });
         }
+
+        const json_map = result.map(station => ({
+            station_id: result.station_id,
+            station_name: result.station_name,
+            station_address: result.station_address,
+            station_phone_num: result.station_phone_num,
+            station_longitude: result.station_longitude,
+            station_latitude: result.station_latitude,
+            station_paymaya_acc: result.station_paymaya_acc,
+            station_gcash_qr: result.station_gcash_qr
+                ? `/public/${result.station_id}/img/qr/${path.basename(result.station_gcash_qr)}`
+                : null,
+            station_paymaya_qr: result.station_paymaya_qr
+                ? `/public/${result.station_id}/img/qr/${path.basename(result.station_paymaya_qr)}`
+                : null,
+        }));
         
-        res.status(200).json({ message: "Successfully retrieved Water Refilling Station Details!", data: result });
+        res.status(200).json({ message: "Successfully retrieved Water Refilling Station Details!", data: json_map });
         Logs.http(`Response being sent: Successfully retrieved Water Refilling Station Details!`);
     }
     catch(error) {
+        res.status(500).json({ error: error.message });
+        Logs.error(`Response being sent: ${error.message}`);
+    }
+});
+
+/**
+ * PUT /update-wrs-details
+ * 
+ * This endpoint updates the details of a specified water refilling station.
+ * 
+ * @async
+ * @function
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {number} req.body.station_id - ID of the water refilling station to update
+ * @param {string} [req.body.station_name] - New name of the water refilling station (optional)
+ * @param {string} [req.body.station_address] - New address of the water refilling station (optional)
+ * @param {string} [req.body.station_phone_num] - New phone number of the water refilling station (optional)
+ * @param {string} [req.body.station_longitude] - New longitude of the water refilling station (optional)
+ * @param {string} [req.body.station_latitude] - New latitude of the water refilling station (optional)
+ * @param {string} [req.body.station_paymaya_acc] - New PayMaya account of the water refilling station (optional)
+ * @param {string} [req.body.station_gcash_qr] - New GCash QR code of the water refilling station (optional)
+ * @param {string} [req.body.station_paymaya_qr] - New PayMaya QR code of the water refilling station (optional)
+ * @param {Object} res - Express response object
+ * 
+ * @returns {Promise<void>} Sends a JSON response indicating the update status of the water refilling station.
+ */
+router.get('/update-wrs-details', async (req, res) => {
+    Logs.http('Received PUT request to /update-wrs-details');
+    Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
+    Logs.http(`Request Headers: ${JSON.stringify(req.headers)}`);
+    Logs.http(`Incoming Remote Address: ${req.ip || req.socket.remoteAddress}`);
+
+    const { station_id, station_name, station_address, station_phone_num, station_longitude, station_latitude, station_paymaya_acc, station_gcash_qr, station_paymaya_qr } = req.body;
+
+    if (!station_id) {
+        Logs.warning(`Response being sent: Missing Required Data for Query! | status: 400`);
+        return res.status(400).json({ error: 'Missing station_id for the update!' });
+    }
+
+    const updateData = {
+        station_name,
+        station_address,
+        station_phone_num,
+        station_longitude,
+        station_latitude,
+        station_paymaya_acc,
+        station_gcash_qr,
+        station_paymaya_qr
+    };
+
+    Object.keys(updateData).forEach(key => updateData[key] == null && delete updateData[key]);
+
+    try {
+        const existingStation = await db('water_refilling_station')
+            .select('*')
+            .where({ station_id })
+            .first();
+
+        if (!existingStation) {
+            Logs.error(`Water Refilling Station with ID ${station_id} doesn't exist! | status: 404`);
+            return res.status(404).json({ message: "Water Refilling Station doesn't exist!" });
+        }
+
+        const result = await db('water_refilling_station')
+            .where({ station_id })
+            .update(updateData);
+
+        if (!result) {
+            Logs.error(`Failed to update Water Refilling Station with ID ${station_id} | status: 400`);
+            return res.status(400).json({ message: "Failed to update Water Refilling Station details!" });
+        }
+
+        res.status(200).json({ message: "Successfully updated Water Refilling Station details!" });
+        Logs.http(`Response being sent: Successfully updated Water Refilling Station details!`);
+
+    } catch (error) {
         res.status(500).json({ error: error.message });
         Logs.error(`Response being sent: ${error.message}`);
     }
@@ -518,7 +647,7 @@ router.post('/get-order-datails', async(req, res) => {
 
         if(!result) {
             Logs.error(`Order doesn't Exists! | status: 404`);
-            return res.status(404).json({ message: "Order doesn't Exists!" });
+            return res.status(404).json({ error: "Order doesn't Exists!" });
         }
         
         res.status(200).json({ message: "Successfully retrieved Order Details!", data: result });
@@ -580,6 +709,108 @@ router.post('/feedback', async(req, res) => {
         Logs.http(`Response being sent: Successfully sent Feedback!`);
     }
     catch(error) {
+        res.status(500).json({ error: error.message });
+        Logs.error(`Response being sent: ${error.message}`);
+    }
+});
+
+// #endregion
+
+// #region QR Code
+
+// 02-05-2025 3:16 PM
+
+/**
+ * POST /upload-qrcode-gcash
+ * 
+ * This endpoint uploads a GCash QR code for a specified water refilling station.
+ * 
+ * @async
+ * @function
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {number} req.body.station_id - ID of the water refilling station
+ * @param {Object} req.file - Uploaded file object
+ * @param {Buffer} req.file.buffer - Buffer containing the uploaded file data
+ * @param {string} req.file.originalname - Original name of the uploaded file
+ * @param {Object} res - Express response object
+ * 
+ * @returns {Promise<void>} Sends a JSON response indicating the upload status of the GCash QR code.
+ */
+app.post('/upload-qrcode-gcash', upload.single('gcash_qr'), async (req, res) => {
+    Logs.http('Received POST request to /feedback');
+    Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
+    Logs.http(`Request Headers: ${JSON.stringify(req.headers)}`);
+    Logs.http(`Incoming Remote Address: ${req.ip || req.socket.remoteAddress}`);
+
+    const { station_id } = req.body;
+
+    const qrCodeFilePath = path.join(__dirname, 'public', station_id, 'img', 'qr', req.file.originalname);
+
+    fs.writeFileSync(qrCodeFilePath, req.file.buffer);
+
+    const qrCodeUrl = `/public/${station_id}/img/qr/${req.file.originalname}`;
+
+    try {
+        const result = await db('water_refilling_station')
+        .where({ station_id })
+        .update({ station_gcash_qr: qrCodeUrl });
+
+        if(!result) {
+            return res.status(404).json({ error: 'Water Refilling Station not Found!' });
+            Logs.http(`Response being sent: Water Refilling Station not Found!`);
+        }
+
+        res.status(200).json({ message: 'QR code Uploaded Successfully!' });
+        Logs.http(`Response being sent: QR code Uploaded Successfully!`);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+        Logs.error(`Response being sent: ${error.message}`);
+    }
+});
+
+/**
+ * POST /upload-qrcode-maya
+ * 
+ * This endpoint uploads a PayMaya QR code for a specified water refilling station.
+ * 
+ * @async
+ * @function
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {number} req.body.station_id - ID of the water refilling station
+ * @param {Object} req.file - Uploaded file object
+ * @param {Buffer} req.file.buffer - Buffer containing the uploaded file data
+ * @param {string} req.file.originalname - Original name of the uploaded file
+ * @param {Object} res - Express response object
+ * 
+ * @returns {Promise<void>} Sends a JSON response indicating the upload status of the PayMaya QR code.
+ */
+app.post('/upload-qrcode-maya', upload.single('maya_qr'), async (req, res) => {
+    Logs.http('Received POST request to /feedback');
+    Logs.http(`Request Body: ${JSON.stringify(req.body)}`);
+    Logs.http(`Request Headers: ${JSON.stringify(req.headers)}`);
+    Logs.http(`Incoming Remote Address: ${req.ip || req.socket.remoteAddress}`);
+
+    const { station_id } = req.body;
+
+    const qrCodeFilePath = path.join(__dirname, 'public', station_id, 'img', 'qr', req.file.originalname);
+
+    const qrCodeUrl = `/public/${station_id}/img/qr/${req.file.originalname}`;
+
+    try {
+        const result = await db('water_refilling_station')
+        .where({ station_id })
+        .update({ station_paymaya_qr: qrCodeUrl });
+
+        if(!result) {
+            return res.status(404).json({ error: 'Water Refilling Station not Found!' });
+            Logs.http(`Response being sent: Water Refilling Station not Found!`);
+        }
+
+        res.status(200).json({ message: 'QR code Uploaded Successfully!' });
+        Logs.http(`Response being sent: QR code Uploaded Successfully!`);
+    } catch (error) {
         res.status(500).json({ error: error.message });
         Logs.error(`Response being sent: ${error.message}`);
     }
