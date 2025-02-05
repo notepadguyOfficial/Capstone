@@ -11,13 +11,35 @@
 	"forwardPorts": [3000, 5432],
 	"postCreateCommand": "npm install && npm install -g nodemon",
 	"customizations": {
+		"codespaces": {
+			"openFiles": [
+				"README.md",
+				"app.js"
+			]
+		},
 		"vscode": {
 			"extensions": [
 				"dbaeumer.vscode-eslint",
 				"esbenp.prettier-vscode",
-				"streetsidesoftware.code-spell-checker"
-			]
+				"streetsidesoftware.code-spell-checker",
+				"mtxr.sqltools",
+				"mtxr.sqltools-driver-pg"
+			],
+			"settings": {
+				"sqltools.connections": [
+					{
+						"previewLimit": 100,
+						"server": "postgres",
+						"port": 5432,
+						"driver": "PostgreSQL",
+						"name": "postgres",
+						"database": "postgres",
+						"username": "postgres",
+						"password": "postgres"
+					}
+				]
+			}
 		}
 	},
-	"remoteUser": "root"
+	"remoteUser": "vscode"
 }
