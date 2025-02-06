@@ -10,7 +10,8 @@
     "forwardPorts": [
       3000,
       5432,
-      5050
+      5050,
+      8080
     ],
     "mounts": [
       "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
@@ -36,6 +37,9 @@
       },
       "5050": {
         "label": "PGAdmin"
+      },
+      "8080": {
+        "label": "Adminer"
       }
     },
     "remoteUser": "root"
