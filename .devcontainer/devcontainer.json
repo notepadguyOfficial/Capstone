@@ -4,7 +4,8 @@
     "name": "Node.js, PostgreSQL, and PGAdmin",
     "image": "mcr.microsoft.com/vscode/devcontainers/javascript-node:0-18",
     "features": {
-      "docker-in-docker": "latest"
+      "docker-in-docker": "latest",
+      "ghcr.io/devcontainers-extra/features/jshint:2": {}
     },
     "postCreateCommand": "npm install",
     "forwardPorts": [
