@@ -7,7 +7,7 @@
       "docker-in-docker": "latest",
       "ghcr.io/devcontainers-extra/features/jshint:2": {}
     },
-    "postCreateCommand": "npm install",
+    "postCreateCommand": "npm install && bash .devcontainer/pre-init-db.sh",
     "forwardPorts": [
       3000,
       5432,
