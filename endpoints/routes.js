@@ -319,18 +319,15 @@ router.post('/register', async (req, res) => {
 
     const fieldConfigs = {
         1: { // Customer
-            requiredFields: ['fname', 'lname', 'address', 'phone', 'gender', 'username', 'password', 'longitude', 'latitude'],
+            requiredFields: ['fname', 'lname', 'phone', 'gender', 'username', 'password'],
             table: 'Customer',
             data: {
                 customer_fname: fname,
                 customer_lname: lname,
                 customer_phone_num: phone,
-                customer_address: address,
                 customer_gender: gender,
                 customer_username: username,
                 customer_password: null, // Placeholder for hashed password
-                customer_address_long: longitude,
-                customer_address_lat: latitude,
             },
             field: 'customer_id',
         },
