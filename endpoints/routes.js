@@ -6,6 +6,9 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 
+const { type_enum, GenerateToken } = require('../utils/lib');
+const bcrypt = require('bcrypt');
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
@@ -63,7 +66,7 @@ router.post('/register-wrs', async (req, res) => {
     const missingFields = config.requiredFields.filter((field) => !req.body[field]);
 
     if (missingFields.length) {
-        Logs.warning(`Response being sent: Missing Fields: ${missingFields.join(', ')} | status: 400`);
+        Logs.warn(`Response being sent: Missing Fields: ${missingFields.join(', ')} | status: 400`);
         return res.status(400).json({ error: `Missing Fields: ${missingFields.join(', ')}` });
     }
 
@@ -155,7 +158,7 @@ router.get('/get-wrs-datails', async(req, res) => {
     const { station_id } = req.body;
 
     if(!station_id) {
-        Logs.warning(`Response being sent: Missing Required Data for Query! | status: 400` );
+        Logs.warn(`Response being sent: Missing Required Data for Query! | status: 400` );
         return res.status(400).json({ error: 'Missing Required Data for Query!' });
     }
 
@@ -226,7 +229,7 @@ router.get('/update-wrs-details', async (req, res) => {
     const { station_id, station_name, station_address, station_phone_num, station_longitude, station_latitude, station_paymaya_acc, station_gcash_qr, station_paymaya_qr } = req.body;
 
     if (!station_id) {
-        Logs.warning(`Response being sent: Missing Required Data for Query! | status: 400`);
+        Logs.warn(`Response being sent: Missing Required Data for Query! | status: 400`);
         return res.status(400).json({ error: 'Missing station_id for the update!' });
     }
 
@@ -305,7 +308,9 @@ router.post('/register', async (req, res) => {
     Logs.http(`Request Headers: ${JSON.stringify(req.headers)}`);
     Logs.http(`Incoming Remote Address: ${req.ip || req.socket.remoteAddress}`);
 
-    const { fname, lname, staff_type, address, phone, gender, username, password, long, lang, type } = req.body;
+    // const { fname, lname, staff_type, address, phone, gender, username, password, longitude, latitude, type } = req.body;
+	
+	const { fname, lname, staff_type, phone, gender, username, password, type } = req.body;
 
     if (!type_enum.includes(type)) {
         Logs.error('Response being sent: Invalid user type! | status: 400');
@@ -314,7 +319,7 @@ router.post('/register', async (req, res) => {
 
     const fieldConfigs = {
         1: { // Customer
-            requiredFields: ['fname', 'lname', 'address', 'phone', 'gender', 'username', 'password', 'lng', 'lat'],
+            requiredFields: ['fname', 'lname', 'address', 'phone', 'gender', 'username', 'password', 'longitude', 'latitude'],
             table: 'Customer',
             data: {
                 customer_fname: fname,
@@ -324,8 +329,8 @@ router.post('/register', async (req, res) => {
                 customer_gender: gender,
                 customer_username: username,
                 customer_password: null, // Placeholder for hashed password
-                customer_address_long: lng,
-                customer_address_lat: lat,
+                customer_address_long: longitude,
+                customer_address_lat: latitude,
             },
             field: 'customer_id',
         },
@@ -369,7 +374,7 @@ router.post('/register', async (req, res) => {
     const missingFields = config.requiredFields.filter((field) => !req.body[field]);
 
     if (missingFields.length) {
-        Logs.warning(`Response being sent: Missing Fields: ${missingFields.join(', ')} | status: 400`);
+        Logs.warn(`Response being sent: Missing Fields: ${missingFields.join(', ')} | status: 400`);
         return res.status(400).json({ error: `Missing Fields: ${missingFields.join(', ')}` });
     }
 
@@ -428,7 +433,7 @@ router.post('/login', async(req, res) => {
         || !password
         || !type
     ) {
-        Logs.warning(`Response being sent: All Fields are require! | status: 400` );
+        Logs.warn(`Response being sent: All Fields are require! | status: 400` );
         return res.status(400).json({ error: 'All Fields are require!' });
     }
 
@@ -471,33 +476,36 @@ router.post('/login', async(req, res) => {
                 Logs.error('Invalid user type provided.');
                 return res.status(400).json({ error: 'Invalid user type!' });
         }
-
-        const data = await db(table)
-            .select({ id: field, password: pass })
-            .where(user, username)
-            .first();
+		
+		const data = await db(table)
+			.select('*')
+			.where(user,  username)
+			.first();
 
         if (!data) {
             Logs.error(`Response being sent: User not found! | status: 404`);
             return res.status(404).json({ error: 'User not found!' });
         }
 
-        const isPasswordValid = await bcrypt.compare(password, data.password);
+        const isPasswordValid = await bcrypt.compare(password, data[pass]);
 
         if (!isPasswordValid) {
             Logs.debug(`Response being sent: Invalid credentials! | status: 401`);
-            return res.status(401).json({ error: 'Invalid credentials!' });
+            //return res.status(401).json({ error: 'Invalid credentials!' });
+			return res.status(401).json({ error: 'Invalid Password!' });
         }
 
         const token = GenerateToken(data.id, type);
 
         await db('authentication')
-            .insert({ userid: data.id, token })
+            .insert({ userid: data[field], token })
             .onConflict('userid')
             .merge({ token, created_at: db.fn.now() });
 
+        const { [data[pass]]: _, ...UserData } = data;
+
         Logs.http(`Response being sent: Login successful for UserID: ${data.id} | Token: ${token}`);
-        res.json({ message: 'Login successful!', token });
+        res.status(200).json({ message: 'Login successful!', token, data: UserData });
     }
     catch(error) {
         res.status(500).json({ error: error.message });
@@ -588,7 +596,7 @@ router.post('/get-orders', async(req, res) => {
     const { ws_id, status } = req.body;
 
     if(!ws_id || !status) {
-        Logs.warning(`Response being sent: Missing Required Data for Query! | status: 400` );
+        Logs.warn(`Response being sent: Missing Required Data for Query! | status: 400` );
         return res.status(400).json({ error: 'Missing Required Data for Query!' });
     }
 
@@ -635,7 +643,7 @@ router.post('/get-order-datails', async(req, res) => {
     const { order_id } = req.body;
 
     if(!order_id) {
-        Logs.warning(`Response being sent: Missing Required Data for Query! | status: 400` );
+        Logs.warn(`Response being sent: Missing Required Data for Query! | status: 400` );
         return res.status(400).json({ error: 'Missing Required Data for Query!' });
     }
 
@@ -686,7 +694,7 @@ router.post('/feedback', async(req, res) => {
     const { rating, comment, order_id } = req.body;
 
     if(!rating || !comment) {
-        Logs.warning(`Response being sent: All Fields are require! | status: 400` );
+        Logs.warn(`Response being sent: All Fields are require! | status: 400` );
         return res.status(400).json({ error: 'All Fields are require!' });
     }
 

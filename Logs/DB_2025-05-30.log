@@ -1,0 +1,34 @@
+[database] [2025-05-30 11:46:29.664 AM]: 	Database connected successfully.
+[database] [2025-05-30 11:46:29.734 AM]: 	A new client connection was established.
+[database] [2025-05-30 11:46:29.737 AM]: 	A new client connection was established.
+[database] [2025-05-30 11:46:29.738 AM]: 	Listening to LOGIN channel
+[database] [2025-05-30 11:46:29.739 AM]: 	A new client connection was established.
+[database] [2025-05-30 11:46:29.740 AM]: 	A new client connection was established.
+[database] [2025-05-30 11:46:29.741 AM]: 	A new client connection was established.
+[database] [2025-05-30 11:46:29.743 AM]: 	A new client connection was established.
+[database] [2025-05-30 11:46:29.743 AM]: 	A new client connection was established.
+[database] [2025-05-30 11:46:29.744 AM]: 	A new client connection was established.
+[database] [2025-05-30 11:46:29.745 AM]: 	Listening to CUSTOMER channel
+[database] [2025-05-30 11:46:29.746 AM]: 	Listening to PRODUCT channel
+[database] [2025-05-30 11:46:29.746 AM]: 	Listening to STAFF channel
+[database] [2025-05-30 11:46:29.747 AM]: 	Listening to OWNER channel
+[database] [2025-05-30 11:46:29.747 AM]: 	Listening to REFILLINGSTATION channel
+[database] [2025-05-30 11:46:29.748 AM]: 	Listening to SALES channel
+[database] [2025-05-30 11:46:29.748 AM]: 	Listening to REGISTER channel
+[database] [2025-05-30 12:00:39.678 PM]: 	Database connected successfully.
+[database] [2025-05-30 12:00:39.703 PM]: 	A new client connection was established.
+[database] [2025-05-30 12:00:39.705 PM]: 	A new client connection was established.
+[database] [2025-05-30 12:00:39.706 PM]: 	A new client connection was established.
+[database] [2025-05-30 12:00:39.707 PM]: 	A new client connection was established.
+[database] [2025-05-30 12:00:39.708 PM]: 	A new client connection was established.
+[database] [2025-05-30 12:00:39.709 PM]: 	Listening to LOGIN channel
+[database] [2025-05-30 12:00:39.710 PM]: 	Listening to REGISTER channel
+[database] [2025-05-30 12:00:39.710 PM]: 	Listening to CUSTOMER channel
+[database] [2025-05-30 12:00:39.711 PM]: 	Listening to PRODUCT channel
+[database] [2025-05-30 12:00:39.711 PM]: 	A new client connection was established.
+[database] [2025-05-30 12:00:39.712 PM]: 	A new client connection was established.
+[database] [2025-05-30 12:00:39.712 PM]: 	A new client connection was established.
+[database] [2025-05-30 12:00:39.713 PM]: 	Listening to OWNER channel
+[database] [2025-05-30 12:00:39.713 PM]: 	Listening to REFILLINGSTATION channel
+[database] [2025-05-30 12:00:39.714 PM]: 	Listening to SALES channel
+[database] [2025-05-30 12:00:39.714 PM]: 	Listening to STAFF channel

@@ -1,0 +1,11 @@
+[http] [2025-05-30 11:47:21.912 AM]: 	GET /
+[http] [2025-05-30 12:10:48.260 PM]: 	POST /login
+[http] [2025-05-30 12:10:48.261 PM]: 	Received POST request to /login
+[http] [2025-05-30 12:10:48.262 PM]: 	Request Body: {"username":"nodemons","password":"123","type":1}
+[http] [2025-05-30 12:10:48.262 PM]: 	Request Headers: {"host":"3296-122-54-89-2.ngrok-free.app","user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36","content-length":"62","accept":"*/*","accept-encoding":"gzip, deflate, br, zstd","accept-language":"en-US,en;q=0.9","content-type":"application/json; charset=utf-8","sec-ch-ua":"\"Chromium\";v=\"136\", \"Google Chrome\";v=\"136\", \"Not.A/Brand\";v=\"99\"","sec-ch-ua-mobile":"?0","sec-ch-ua-platform":"\"Windows\"","sec-fetch-dest":"empty","sec-fetch-mode":"cors","sec-fetch-site":"cross-site","server":"Heroku","x-forwarded-for":"122.54.89.2, 44.193.201.160","x-forwarded-host":"3296-122-54-89-2.ngrok-free.app","x-forwarded-port":"443","x-forwarded-proto":"https, https"}
+[http] [2025-05-30 12:10:48.263 PM]: 	Incoming Remote Address: ::1
+[http] [2025-05-30 12:11:02.184 PM]: 	POST /login
+[http] [2025-05-30 12:11:02.185 PM]: 	Received POST request to /login
+[http] [2025-05-30 12:11:02.185 PM]: 	Request Body: {"username":"nodemon","password":"123s","type":1}
+[http] [2025-05-30 12:11:02.185 PM]: 	Request Headers: {"host":"3296-122-54-89-2.ngrok-free.app","user-agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36","content-length":"62","accept":"*/*","accept-encoding":"gzip, deflate, br, zstd","accept-language":"en-US,en;q=0.9","content-type":"application/json; charset=utf-8","sec-ch-ua":"\"Chromium\";v=\"136\", \"Google Chrome\";v=\"136\", \"Not.A/Brand\";v=\"99\"","sec-ch-ua-mobile":"?0","sec-ch-ua-platform":"\"Windows\"","sec-fetch-dest":"empty","sec-fetch-mode":"cors","sec-fetch-site":"cross-site","server":"Heroku","x-forwarded-for":"122.54.89.2, 44.193.201.160","x-forwarded-host":"3296-122-54-89-2.ngrok-free.app","x-forwarded-port":"443","x-forwarded-proto":"https, https"}
+[http] [2025-05-30 12:11:02.185 PM]: 	Incoming Remote Address: ::1

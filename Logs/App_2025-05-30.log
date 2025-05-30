@@ -1,0 +1,7 @@
+[info] [2025-05-30 11:46:29.662 AM]: 	Local Host: 172.19.26.93
+[info] [2025-05-30 11:46:29.663 AM]: 	Public Host: 122.54.89.2
+[info] [2025-05-30 11:46:29.663 AM]: 	Port: 3000
+[info] [2025-05-30 12:00:39.676 PM]: 	Local Host: 172.19.26.93
+[info] [2025-05-30 12:00:39.677 PM]: 	Public Host: 122.54.89.2
+[info] [2025-05-30 12:00:39.678 PM]: 	Port: 3000
+[debug] [2025-05-30 12:11:02.239 PM]: 	Response being sent: Invalid credentials! | status: 401
