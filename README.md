@@ -57,6 +57,36 @@ Hydro App is a mobile platform designed to streamline sales, orders, delivery, a
       ```
     - Alternatively, you can query the code inside `base.sql` directly in your PostgreSQL client.
 
+## 📘 API Status Codes
+- The backend uses standard HTTP status codes along with some custom codes to provide more specific feedback.
+
+### Success Responses
+
+| Code | Meaning | Description |
+|------|---------|-------------|
+| 200  | OK      | Request was successful. |
+| 201  | Created | Resource was successfully created. |
+
+### ⚠️ Client Errors
+
+| Code | Meaning                     | Description |
+|------|-----------------------------|-------------|
+| 400  | Bad Request                 | The request is malformed or invalid. |
+| 401  | Unauthorized                | Authentication failed or missing. |
+| 403  | Forbidden                   | You don’t have permission to access. |
+| 404  | Not Found                   | Resource doesn’t exist. |
+| 422  | Unprocessable Entity        | Validation error on input data. |
+| 1001 | Username Already Exists     | A user tried to register an existing username. |
+| 1002 | Phone Number Already Exists | A user tried to register an existing phone number. |
+| 1003 | User Not Found              | The specified user was not found in the database. |
+| 1004 | Invalid Password            | The password provided is incorrect. |
+
+### Server Errors
+
+| Code | Meaning               | Description                                |
+|------|------------------------|--------------------------------------------|
+| 500  | Internal Server Error | Unexpected condition encountered.          |
+
 ## Configuration
 
 1. **Environment Variables:**

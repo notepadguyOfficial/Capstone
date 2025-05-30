@@ -310,7 +310,7 @@ router.post('/register', async (req, res) => {
 
     // const { fname, lname, staff_type, address, phone, gender, username, password, longitude, latitude, type } = req.body;
 	
-	const { fname, lname, staff_type, phone, gender, username, password, type } = req.body;
+	const { fname, lname, staff_type, phone, gender, username, password, birth, type } = req.body;
 
     if (!type_enum.includes(type)) {
         Logs.error('Response being sent: Invalid user type! | status: 400');
@@ -319,7 +319,7 @@ router.post('/register', async (req, res) => {
 
     const fieldConfigs = {
         1: { // Customer
-            requiredFields: ['fname', 'lname', 'phone', 'gender', 'username', 'password'],
+            requiredFields: ['fname', 'lname', 'phone', 'gender', 'username', 'password', 'birth'],
             table: 'Customer',
             data: {
                 customer_fname: fname,
@@ -328,6 +328,7 @@ router.post('/register', async (req, res) => {
                 customer_gender: gender,
                 customer_username: username,
                 customer_password: null, // Placeholder for hashed password
+                customer_dateofbirth: birth,
             },
             field: 'customer_id',
         },
@@ -376,6 +377,25 @@ router.post('/register', async (req, res) => {
     }
 
     try {
+
+        const usernameExists = await db(config.table)
+            .where(`${Object.keys(config.data).find(k => k.includes('username'))}`, username)
+            .first();
+
+        if (usernameExists) {
+            Logs.warn(`Response being sent: Username already exists | status: 409 | Code: 1001`);
+            return res.status(409).json({ error: 'Username already exists', code: 1001 });
+        }
+
+        const phoneExists = await db(config.table)
+            .where(`${Object.keys(config.data).find(k => k.includes('phone'))}`, phone)
+            .first();
+
+        if (phoneExists) {
+            Logs.warn(`Response being sent: Phone number already in use | status: 409  | Code: 1002`);
+            return res.status(409).json({ error: 'Phone number already in use', code: 1002 });
+        }
+
         const hash = await bcrypt.hash(password, 10);
         config.data[Object.keys(config.data).find((key) => key.includes('password'))] = hash;
 
@@ -390,7 +410,12 @@ router.post('/register', async (req, res) => {
             .onConflict('userid')
             .merge({ token, created_at: db.fn.now() });
 
-        res.json({ message: 'User Registered Successfully!', token });
+        const data = await db(config.table)
+            .select('*')
+            .where(config.field, user[config.field])
+            .first();
+
+        res.status(200).json({ message: 'User Registered Successfully!', token, data });
         Logs.http(`Response being sent: User Registered Successfully! User ID: ${user[config.field]} | Token: ${token}`);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -480,16 +505,15 @@ router.post('/login', async(req, res) => {
 			.first();
 
         if (!data) {
-            Logs.error(`Response being sent: User not found! | status: 404`);
-            return res.status(404).json({ error: 'User not found!' });
+            Logs.error(`Response being sent: User not found! | status: 404 | Code: 1003`);
+            return res.status(404).json({ error: 'User not found!', code: 1003 });
         }
 
         const isPasswordValid = await bcrypt.compare(password, data[pass]);
 
         if (!isPasswordValid) {
-            Logs.debug(`Response being sent: Invalid credentials! | status: 401`);
-            //return res.status(401).json({ error: 'Invalid credentials!' });
-			return res.status(401).json({ error: 'Invalid Password!' });
+            Logs.error(`Response being sent: Invalid Password! | status: 401 | Code: 1004`);
+			return res.status(401).json({ error: 'Invalid Password!', code: 1004 });
         }
 
         const token = GenerateToken(data.id, type);
@@ -818,6 +842,32 @@ router.post('/upload-qrcode-maya', upload.single('maya_qr'), async (req, res) =>
     } catch (error) {
         res.status(500).json({ error: error.message });
         Logs.error(`Response being sent: ${error.message}`);
+    }
+});
+
+// #endregion
+
+// #region Test
+
+const serverStartTime = new Date();
+
+router.get('/ping', async (req, res) => {
+    try
+    {
+        res.status(200).json({
+            status: 'ok',
+            running: 'True',
+            message: 'Server is running',
+            uptime: process.uptime(),
+            timestamp: new Date().toISOString(),
+            startedAt: serverStartTime.toISOString()
+        });
+    } catch(error) {
+        res.status(500).json({
+            status: 'error',
+            message: 'Internal server error',
+            error: error.message
+        });
     }
 });
 
