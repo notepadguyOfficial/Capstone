@@ -1,9 +1,13 @@
+# Ignore build artifacts and logs
 Logs/
-.git/
-node_modules/
-.vscode/
-
-*.logs
+*.log
 *.bak
 
+# Node.js dependencies
+node_modules/
+
+# VS Code editor settings
+.vscode/
+
+# Environment config
 .env
